@@ -1,0 +1,122 @@
+@startuml Architecture
+!theme plain
+
+' ===== 包定义 =====
+package "tools-interface" {
+    [ToolController] as Controller
+    [PageController] as PageCtrl
+    [ToolRequestDTO] as ReqDTO
+    [ToolResponseDTO] as ResDTO
+}
+
+package "tools-application" {
+    [EncoderApplicationService] as EncoderAppSvc
+    [CryptoApplicationService] as CryptoAppSvc
+    [DateTimeApplicationService] as DateTimeAppSvc
+    [FormatterApplicationService] as FormatterAppSvc
+}
+
+package "tools-domain" {
+    package "encoder" {
+        [EncoderService] as EncoderSvc
+        interface "EncoderTool" as EncoderToolIF
+    }
+
+    package "datetime" {
+        [DateTimeService] as DateTimeSvc
+        interface "DateTimeTool" as DateTimeToolIF
+    }
+
+    package "formatter" {
+        [FormatterService] as FormatterSvc
+        interface "FormatterTool" as FormatterToolIF
+    }
+
+    package "crypto" {
+        [CryptoService] as CryptoSvc
+        interface "CryptoTool" as CryptoToolIF
+    }
+
+    package "common" {
+        [ToolResult] as ToolResult
+    }
+}
+
+package "tools-infrastructure" {
+    [RateLimiter] as RateLimiter
+    [SlidingWindowCounter] as SlidingWindow
+}
+
+' ===== 依赖关系 =====
+
+' Controller层依赖
+Controller --> EncoderAppSvc
+Controller --> CryptoAppSvc
+Controller --> DateTimeAppSvc
+Controller --> FormatterAppSvc
+
+PageCtrl --> EncoderAppSvc
+PageCtrl --> CryptoAppSvc
+PageCtrl --> DateTimeAppSvc
+PageCtrl --> FormatterAppSvc
+
+' 应用层依赖领域接口
+EncoderAppSvc --> EncoderToolIF
+CryptoAppSvc --> CryptoToolIF
+DateTimeAppSvc --> DateTimeToolIF
+FormatterAppSvc --> FormatterToolIF
+
+' 领域服务实现接口
+EncoderSvc ..|> EncoderToolIF
+CryptoSvc ..|> CryptoToolIF
+DateTimeSvc ..|> DateTimeToolIF
+FormatterSvc ..|> FormatterToolIF
+
+' 应用层依赖领域服务
+EncoderAppSvc --> EncoderSvc
+CryptoAppSvc --> CryptoSvc
+DateTimeAppSvc --> DateTimeSvc
+FormatterAppSvc --> FormatterSvc
+
+' DTO依赖
+ReqDTO --> ToolResult
+ResDTO --> ToolResult
+
+' 限流依赖
+Controller --> RateLimiter
+RateLimiter --> SlidingWindow
+
+' ===== 类说明 =====
+note right of Controller
+  职责：接收HTTP请求
+  路径：/api/*
+  方法：POST
+end note
+
+note right of RateLimiter
+  职责：滑动窗口限流
+  窗口：60秒
+  最大请求：60次/分钟
+end note
+
+note bottom of EncoderSvc
+  职责：Base64、URL、HTML、Unicode编解码
+  充血模型：包含业务逻辑
+end note
+
+note bottom of CryptoSvc
+  职责：MD5、SHA、AES、DES、RSA加解密
+  充血模型：加密策略内聚
+end note
+
+note bottom of DateTimeSvc
+  职责：时间戳、日期格式、时区转换
+  充血模型：日期计算逻辑内聚
+end note
+
+note bottom of FormatterSvc
+  职责：JSON、XML、SQL格式化
+  充血模型：格式化策略内聚
+end note
+
+@enduml

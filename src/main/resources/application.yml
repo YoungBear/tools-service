@@ -1,0 +1,24 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: tools-service
+  messages:
+    basename: messages
+    default-locale: zh_CN
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    cache: false
+
+tools:
+  ratelimit:
+    enabled: true
+    window-size: 60
+    max-requests: 60
+
+logging:
+  level:
+    com.tools: DEBUG

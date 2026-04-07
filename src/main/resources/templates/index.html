@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="#{app.title}">在线工具箱</title>
+    <link rel="stylesheet" th:href="@{/webjars/element-plus/2.6.3/theme-chalk/index.css}">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        #app { min-height: 100vh; display: flex; flex-direction: column; }
+        .header { background: #409EFF; color: white; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 20px; }
+        .main-container { display: flex; flex: 1; }
+        .sidebar { width: 200px; background: #f5f7fa; padding: 16px; }
+        .sidebar-item { padding: 12px 16px; cursor: pointer; border-radius: 4px; margin-bottom: 4px; transition: all 0.3s; }
+        .sidebar-item:hover, .sidebar-item.active { background: #409EFF; color: white; }
+        .content { flex: 1; padding: 24px; overflow-y: auto; background: #f0f2f5; }
+        .tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 16px; }
+        .tool-card { background: white; border-radius: 8px; padding: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+        .tool-card h3 { font-size: 16px; margin-bottom: 12px; color: #303133; }
+        .tool-card textarea { width: 100%; height: 100px; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; resize: vertical; font-family: monospace; }
+        .tool-card .result { margin-top: 12px; padding: 8px; background: #f5f7fa; border-radius: 4px; min-height: 60px; word-break: break-all; font-family: monospace; font-size: 13px; }
+        .tool-card .actions { margin-top: 12px; display: flex; gap: 8px; }
+        .input-row { margin-bottom: 12px; }
+        .input-row label { display: block; margin-bottom: 4px; font-size: 14px; color: #606266; }
+        .footer { background: #f5f7fa; padding: 16px; text-align: center; color: #909399; font-size: 14px; }
+        .language-switch { display: flex; gap: 8px; }
+        .no-input { color: #909399; text-align: center; padding: 20px; }
+    </style>
+</head>
+<body>
+<div id="app">
+    <header class="header">
+        <h1 th:text="#{app.title}">在线工具箱</h1>
+        <div class="language-switch">
+            <el-button size="small" :type="locale === 'zh-CN' ? 'primary' : ''" @click="switchLanguage('zh-CN')">中文</el-button>
+            <el-button size="small" :type="locale === 'en-US' ? 'primary' : ''" @click="switchLanguage('en-US')">English</el-button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <aside class="sidebar">
+            <div class="sidebar-item" :class="{active: activeCategory === 'encoder'}" @click="activeCategory = 'encoder'" th:text="#{nav.encoder}">编码解码</div>
+            <div class="sidebar-item" :class="{active: activeCategory === 'datetime'}" @click="activeCategory = 'datetime'" th:text="#{nav.datetime}">日期时间</div>
+            <div class="sidebar-item" :class="{active: activeCategory === 'formatter'}" @click="activeCategory = 'formatter'" th:text="#{nav.formatter}">格式化</div>
+            <div class="sidebar-item" :class="{active: activeCategory === 'crypto'}" @click="activeCategory = 'crypto'" th:text="#{nav.crypto}">加解密</div>
+            <div class="sidebar-item" :class="{active: activeCategory === 'common'}" @click="activeCategory = 'common'" th:text="#{nav.common}">其他工具</div>
+        </aside>
+
+        <main class="content">
+            <div class="tools-grid">
+                <div class="tool-card" v-for="tool in currentTools" :key="tool.id">
+                    <h3>{{ tool.name }}</h3>
+
+                    <div v-if="tool.inputType === 'textarea'">
+                        <textarea v-model="tool.input" :placeholder="tool.inputPlaceholder || '请输入内容'" @keydown.ctrl.enter="executeTool(tool)"></textarea>
+                    </div>
+                    <div v-else-if="tool.inputType === 'text'">
+                        <el-input v-model="tool.input" :placeholder="tool.inputPlaceholder || '请输入内容'"></el-input>
+                    </div>
+                    <div v-else-if="tool.inputType === 'none'" class="no-input">
+                        点击执行按钮即可
+                    </div>
+
+                    <div v-if="tool.extraParams" class="input-row" style="margin-top: 8px;">
+                        <template v-for="param in tool.extraParams" :key="param.key">
+                            <label>{{ param.label }}</label>
+                            <el-input v-model="tool.extraData[param.key]" :placeholder="param.placeholder"></el-input>
+                        </template>
+                    </div>
+
+                    <div class="actions">
+                        <el-button type="primary" size="small" @click="executeTool(tool)" th:text="#{action.execute}">执行</el-button>
+                        <el-button size="small" @click="clearTool(tool)" th:text="#{action.clear}">清空</el-button>
+                        <el-button size="small" @click="copyResult(tool.result)" th:text="#{action.copy}">复制</el-button>
+                    </div>
+
+                    <div class="result">{{ tool.result || '输出结果' }}</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer class="footer">
+        &copy; 2026 Online Tools. All rights reserved.
+    </footer>
+</div>
+
+<script src="https://unpkg.com/vue@3.4.21/dist/vue.global.prod.js"></script>
+<script src="https://unpkg.com/element-plus@2.6.3/dist/index.full.js"></script>
+<script src="https://unpkg.com/axios@1.6.8/dist/axios.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/element-plus@2.6.3/theme-chalk/index.css">
+<script th:inline="javascript">
+const { createApp, ref, computed } = Vue;
+const { ElMessage } = ElementPlus;
+
+const app = createApp({
+    setup() {
+        const locale = ref('zh-CN');
+        const activeCategory = ref('encoder');
+
+        const tools = ref([
+            { id: 'base64-encode', category: 'encoder', name: 'Base64编码', inputType: 'textarea', inputPlaceholder: '请输入要编码的文本' },
+            { id: 'base64-decode', category: 'encoder', name: 'Base64解码', inputType: 'textarea', inputPlaceholder: '请输入要解码的Base64' },
+            { id: 'url-encode', category: 'encoder', name: 'URL编码', inputType: 'textarea', inputPlaceholder: '请输入要编码的URL' },
+            { id: 'url-decode', category: 'encoder', name: 'URL解码', inputType: 'textarea', inputPlaceholder: '请输入要解码的URL' },
+            { id: 'html-escape', category: 'encoder', name: 'HTML转义', inputType: 'textarea', inputPlaceholder: '请输入要转义的HTML' },
+            { id: 'html-unescape', category: 'encoder', name: 'HTML反转义', inputType: 'textarea', inputPlaceholder: '请输入要反转义的内容' },
+            { id: 'unicode-encode', category: 'encoder', name: 'Unicode编码', inputType: 'textarea', inputPlaceholder: '请输入要编码的中文' },
+            { id: 'unicode-decode', category: 'encoder', name: 'Unicode解码', inputType: 'textarea', inputPlaceholder: '请输入要解码的Unicode' },
+
+            { id: 'current-timestamp', category: 'datetime', name: '当前时间戳', inputType: 'none' },
+            { id: 'timestamp-to-date', category: 'datetime', name: '时间戳转日期', inputType: 'text', inputPlaceholder: '请输入时间戳', extraParams: [{key: 'format', label: '日期格式', placeholder: 'yyyy-MM-dd HH:mm:ss'}], extraData: {format: 'yyyy-MM-dd HH:mm:ss'} },
+            { id: 'date-to-timestamp', category: 'datetime', name: '日期转时间戳', inputType: 'text', inputPlaceholder: '请输入日期', extraParams: [{key: 'format', label: '日期格式', placeholder: 'yyyy-MM-dd HH:mm:ss'}], extraData: {format: 'yyyy-MM-dd HH:mm:ss'} },
+
+            { id: 'format-json', category: 'formatter', name: 'JSON格式化', inputType: 'textarea', inputPlaceholder: '请输入JSON' },
+            { id: 'compress-json', category: 'formatter', name: 'JSON压缩', inputType: 'textarea', inputPlaceholder: '请输入JSON' },
+            { id: 'format-xml', category: 'formatter', name: 'XML格式化', inputType: 'textarea', inputPlaceholder: '请输入XML' },
+            { id: 'format-sql', category: 'formatter', name: 'SQL美化', inputType: 'textarea', inputPlaceholder: '请输入SQL' },
+
+            { id: 'md5', category: 'crypto', name: 'MD5哈希', inputType: 'textarea', inputPlaceholder: '请输入要哈希的文本' },
+            { id: 'sha1', category: 'crypto', name: 'SHA-1哈希', inputType: 'textarea', inputPlaceholder: '请输入要哈希的文本' },
+            { id: 'sha256', category: 'crypto', name: 'SHA-256哈希', inputType: 'textarea', inputPlaceholder: '请输入要哈希的文本' },
+            { id: 'aes-encrypt', category: 'crypto', name: 'AES加密', inputType: 'textarea', inputPlaceholder: '请输入要加密的文本', extraParams: [{key: 'key', label: '密钥', placeholder: '请输入密钥'}], extraData: {key: ''} },
+            { id: 'aes-decrypt', category: 'crypto', name: 'AES解密', inputType: 'textarea', inputPlaceholder: '请输入要解密的密文', extraParams: [{key: 'key', label: '密钥', placeholder: '请输入密钥'}], extraData: {key: ''} },
+            { id: 'des-encrypt', category: 'crypto', name: 'DES加密', inputType: 'textarea', inputPlaceholder: '请输入要加密的文本', extraParams: [{key: 'key', label: '密钥', placeholder: '请输入密钥'}], extraData: {key: ''} },
+            { id: 'des-decrypt', category: 'crypto', name: 'DES解密', inputType: 'textarea', inputPlaceholder: '请输入要解密的密文', extraParams: [{key: 'key', label: '密钥', placeholder: '请输入密钥'}], extraData: {key: ''} },
+            { id: 'rsa-generate-key', category: 'crypto', name: '生成RSA密钥对', inputType: 'none' },
+
+            { id: 'hex-to-rgb', category: 'common', name: 'HEX转RGB', inputType: 'text', inputPlaceholder: '请输入HEX颜色值，如#FF0000' },
+            { id: 'rgb-to-hex', category: 'common', name: 'RGB转HEX', inputType: 'text', inputPlaceholder: '请输入RGB值，如255,0,0', extraParams: [{key: 'r', label: 'R', placeholder: 'R'}, {key: 'g', label: 'G', placeholder: 'G'}, {key: 'b', label: 'B', placeholder: 'B'}], extraData: {r: '', g: '', b: ''} },
+            { id: 'generate-uuid', category: 'common', name: '生成UUID', inputType: 'none' },
+            { id: 'parse-jwt', category: 'common', name: 'JWT解析', inputType: 'textarea', inputPlaceholder: '请输入JWT Token' },
+            { id: 'parse-cron', category: 'common', name: 'Cron解析', inputType: 'text', inputPlaceholder: '请输入Cron表达式，如0 0 * * * ?' },
+            { id: 'test-regex', category: 'common', name: '正则测试', inputType: 'textarea', inputPlaceholder: '请输入要匹配的文本', extraParams: [{key: 'pattern', label: '正则表达式', placeholder: '请输入正则表达式'}], extraData: {pattern: ''} },
+        ]);
+
+        const currentTools = computed(() => {
+            return tools.value.filter(t => t.category === activeCategory.value);
+        });
+
+        const switchLanguage = (lang) => {
+            locale.value = lang;
+        };
+
+        const getApiPath = (toolId) => {
+            const pathMap = {
+                'base64-encode': '/api/encode/base64',
+                'base64-decode': '/api/decode/base64',
+                'url-encode': '/api/encode/url',
+                'url-decode': '/api/decode/url',
+                'html-escape': '/api/encode/html',
+                'html-unescape': '/api/decode/html',
+                'unicode-encode': '/api/encode/unicode',
+                'unicode-decode': '/api/decode/unicode',
+                'current-timestamp': '/api/datetime/timestamp',
+                'timestamp-to-date': '/api/datetime/timestamp-to-date',
+                'date-to-timestamp': '/api/datetime/date-to-timestamp',
+                'format-json': '/api/format/json',
+                'compress-json': '/api/format/json/compress',
+                'format-xml': '/api/format/xml',
+                'format-sql': '/api/format/sql',
+                'md5': '/api/crypto/md5',
+                'sha1': '/api/crypto/sha1',
+                'sha256': '/api/crypto/sha256',
+                'aes-encrypt': '/api/crypto/aes/encrypt',
+                'aes-decrypt': '/api/crypto/aes/decrypt',
+                'des-encrypt': '/api/crypto/des/encrypt',
+                'des-decrypt': '/api/crypto/des/decrypt',
+                'rsa-generate-key': '/api/crypto/rsa/generate-key',
+                'hex-to-rgb': '/api/common/color/hex-to-rgb',
+                'rgb-to-hex': '/api/common/color/rgb-to-hex',
+                'generate-uuid': '/api/common/uuid/generate',
+                'parse-jwt': '/api/common/jwt/parse',
+                'parse-cron': '/api/common/cron/parse',
+                'test-regex': '/api/common/regex/test',
+            };
+            return pathMap[toolId];
+        };
+
+        const executeTool = async (tool) => {
+            const path = getApiPath(tool.id);
+            if (!path) {
+                ElMessage.error('Tool not found');
+                return;
+            }
+
+            let data = {};
+            if (tool.inputType === 'textarea' || tool.inputType === 'text') {
+                if (!tool.input) {
+                    ElMessage.warning('请输入内容');
+                    return;
+                }
+                data.input = tool.input;
+            }
+
+            if (tool.extraParams) {
+                tool.extraParams.forEach(param => {
+                    data[param.key] = tool.extraData[param.key];
+                });
+            }
+
+            try {
+                const response = await axios.post(path, data);
+                if (response.data.success) {
+                    tool.result = response.data.data;
+                    ElMessage.success('操作成功');
+                } else {
+                    ElMessage.error(response.data.error?.message || '操作失败');
+                }
+            } catch (error) {
+                if (error.response?.status === 429) {
+                    ElMessage.error('请求过于频繁，请稍后再试');
+                } else {
+                    ElMessage.error('请求失败: ' + (error.response?.data?.error?.message || error.message));
+                }
+            }
+        };
+
+        const clearTool = (tool) => {
+            tool.input = '';
+            tool.result = '';
+            if (tool.extraData) {
+                Object.keys(tool.extraData).forEach(key => {
+                    tool.extraData[key] = '';
+                });
+            }
+        };
+
+        const copyResult = (text) => {
+            if (!text) return;
+            navigator.clipboard.writeText(text).then(() => {
+                ElMessage.success('已复制到剪贴板');
+            }).catch(() => {
+                ElMessage.error('复制失败');
+            });
+        };
+
+        return {
+            locale,
+            activeCategory,
+            currentTools,
+            switchLanguage,
+            executeTool,
+            clearTool,
+            copyResult,
+        };
+    }
+});
+
+app.mount('#app');
+</script>
+</body>
+</html>
