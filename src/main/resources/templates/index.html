@@ -853,7 +853,7 @@ const app = createApp({
         const focusedResultId = ref(null);
         const translations = ref({});
 
-        // Translation function
+        // Translation computed - returns a function that accesses translations reactively
         const t = (key) => {
             return translations.value[key] || key;
         };
@@ -862,7 +862,8 @@ const app = createApp({
         const fetchTranslations = async (lang) => {
             try {
                 const response = await axios.get('/api/i18n?lang=' + lang);
-                translations.value = response.data;
+                // Replace the entire translations object to trigger reactivity
+                translations.value = { ...response.data };
             } catch (error) {
                 console.error('Failed to fetch translations:', error);
             }
@@ -1107,6 +1108,7 @@ const app = createApp({
         return {
             locale,
             isDark,
+            translations,
             t,
             toggleTheme,
             activeCategory,
