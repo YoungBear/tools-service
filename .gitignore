@@ -27,3 +27,5 @@
 # ai-tools
 .claude
 .omc
+.agents
+skills-lock.json

@@ -5,532 +5,805 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="#{app.title}">在线工具箱</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/element-plus.css}">
     <style>
-        /* Dark Theme Variables (default) */
+        /* ========================================
+           Design System Tokens
+           ======================================== */
         :root {
-            --bg-primary: #0a0e14;
-            --bg-secondary: #0d1117;
-            --bg-tertiary: #161b22;
-            --bg-card: #1c2128;
-            --accent-cyan: #58a6ff;
-            --accent-green: #3fb950;
-            --accent-orange: #f0883e;
-            --accent-purple: #a371f7;
-            --accent-red: #f85149;
-            --text-primary: #e6edf3;
-            --text-secondary: #8b949e;
-            --text-muted: #484f58;
-            --border-color: #30363d;
-            --glow-cyan: 0 0 20px rgba(88, 166, 255, 0.3);
-            --glow-green: 0 0 20px rgba(63, 185, 80, 0.3);
+            /* Colors - Dark Theme (default) */
+            --color-bg-primary: #0f1117;
+            --color-bg-secondary: #16181d;
+            --color-bg-tertiary: #1e2128;
+            --color-bg-elevated: #252930;
+            --color-bg-card: #1a1d23;
+
+            --color-text-primary: #e8eaed;
+            --color-text-secondary: #9aa0a6;
+            --color-text-muted: #5f6368;
+
+            --color-border: #2d3139;
+            --color-border-subtle: #22262c;
+
+            --color-accent: #4f8fea;
+            --color-accent-hover: #6ba3f5;
+            --color-accent-muted: rgba(79, 143, 234, 0.12);
+
+            --color-success: #34d399;
+            --color-warning: #fbbf24;
+            --color-error: #f87171;
+
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+
+            --transition-fast: 150ms ease;
+            --transition-normal: 250ms ease;
         }
 
-        /* Light Theme Variables (override :root) */
+        /* Light Theme */
         [data-theme="light"] {
-            --bg-primary: #ffffff;
-            --bg-secondary: #f6f8fa;
-            --bg-tertiary: #eaeef2;
-            --bg-card: #ffffff;
-            --accent-cyan: #0969da;
-            --accent-green: #1a7f37;
-            --accent-orange: #bf8700;
-            --accent-purple: #8250df;
-            --accent-red: #cf222e;
-            --text-primary: #1f2328;
-            --text-secondary: #656d76;
-            --text-muted: #8b949e;
-            --border-color: #d0d7de;
-            --glow-cyan: 0 0 20px rgba(9, 105, 218, 0.15);
-            --glow-green: 0 0 20px rgba(26, 127, 55, 0.15);
+            --color-bg-primary: #f8f9fa;
+            --color-bg-secondary: #ffffff;
+            --color-bg-tertiary: #eef0f2;
+            --color-bg-elevated: #e5e7eb;
+            --color-bg-card: #ffffff;
+
+            --color-text-primary: #1f2937;
+            --color-text-secondary: #6b7280;
+            --color-text-muted: #9ca3af;
+
+            --color-border: #d1d5db;
+            --color-border-subtle: #e5e7eb;
+
+            --color-accent: #3b82f6;
+            --color-accent-hover: #2563eb;
+            --color-accent-muted: rgba(59, 130, 246, 0.08);
+
+            --color-success: #10b981;
+            --color-warning: #f59e0b;
+            --color-error: #ef4444;
+
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+        /* ========================================
+           Reset & Base
+           ======================================== */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
         body {
-            font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--color-bg-primary);
+            color: var(--color-text-primary);
             min-height: 100vh;
-            overflow-x: hidden;
-            transition: background 0.3s ease, color 0.3s ease;
+            line-height: 1.5;
+            transition: background var(--transition-normal), color var(--transition-normal);
         }
 
-        /* Background grid pattern - only for dark */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background-image:
-                linear-gradient(rgba(88, 166, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(88, 166, 255, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
-            pointer-events: none;
-            z-index: 0;
-        }
-        [data-theme="light"] body::before {
-            background-image:
-                linear-gradient(rgba(9, 105, 218, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(9, 105, 218, 0.05) 1px, transparent 1px);
+        /* ========================================
+           App Layout
+           ======================================== */
+        #app {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        #app { min-height: 100vh; display: flex; flex-direction: column; position: relative; z-index: 1; }
-
-        /* Header */
+        /* ========================================
+           Header
+           ======================================== */
         .header {
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-color);
-            padding: 20px 32px;
+            background: var(--color-bg-secondary);
+            border-bottom: 1px solid var(--color-border);
+            padding: 0 32px;
+            height: 64px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: relative;
-            transition: background 0.3s ease, border-color 0.3s ease;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            transition: background var(--transition-normal), border-color var(--transition-normal);
         }
-        .header::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
-            opacity: 0.5;
-        }
-        .header h1 {
-            font-size: 24px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
+
+        .header-brand {
             display: flex;
             align-items: center;
             gap: 12px;
         }
-        .header h1::before {
-            content: '>';
-            color: var(--accent-green);
-            font-family: 'JetBrains Mono', monospace;
-            animation: blink 1s infinite;
-        }
-        @keyframes blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0; }
+
+        .header-logo {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* Header controls */
+        .header-logo svg {
+            width: 24px;
+            height: 24px;
+            color: var(--color-accent);
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            letter-spacing: -0.02em;
+        }
+
         .header-controls {
             display: flex;
-            gap: 16px;
             align-items: center;
+            gap: 16px;
         }
 
-        /* Theme toggle */
+        /* Theme Toggle */
         .theme-toggle {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 8px 12px;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
+            padding: 8px 14px;
+            background: var(--color-bg-tertiary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
             cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .theme-toggle:hover {
-            border-color: var(--accent-cyan);
-        }
-        .theme-toggle .icon {
-            font-size: 16px;
-            line-height: 1;
-        }
-        .theme-toggle .label {
+            transition: all var(--transition-fast);
+            color: var(--color-text-secondary);
             font-size: 13px;
             font-weight: 500;
-            color: var(--text-secondary);
         }
 
-        /* Language switch */
-        .language-switch { display: flex; gap: 4px; }
-        .language-switch .el-button {
+        .theme-toggle:hover {
+            border-color: var(--color-accent);
+            color: var(--color-text-primary);
+        }
+
+        .theme-toggle svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Language Switch */
+        .language-switch {
+            display: flex;
+            background: var(--color-bg-tertiary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: 3px;
+        }
+
+        .language-switch button {
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 500;
             background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-secondary);
-            transition: all 0.3s ease;
-        }
-        .language-switch .el-button:hover {
-            border-color: var(--accent-cyan);
-            color: var(--accent-cyan);
-        }
-        .language-switch .el-button.is-type {
-            background: var(--accent-cyan);
-            border-color: var(--accent-cyan);
-            color: var(--bg-primary);
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            color: var(--color-text-secondary);
+            transition: all var(--transition-fast);
         }
 
-        /* Main container */
-        .main-container { display: flex; flex: 1; }
+        .language-switch button:hover {
+            color: var(--color-text-primary);
+        }
 
-        /* Sidebar */
+        .language-switch button.active {
+            background: var(--color-accent);
+            color: #ffffff;
+        }
+
+        /* ========================================
+           Main Container
+           ======================================== */
+        .main-container {
+            display: flex;
+            flex: 1;
+        }
+
+        /* ========================================
+           Sidebar
+           ======================================== */
         .sidebar {
-            width: 220px;
-            background: var(--bg-secondary);
-            border-right: 1px solid var(--border-color);
-            padding: 24px 16px;
+            width: 240px;
+            background: var(--color-bg-secondary);
+            border-right: 1px solid var(--color-border);
+            padding: 24px 12px;
             display: flex;
             flex-direction: column;
             gap: 4px;
-            transition: background 0.3s ease, border-color 0.3s ease;
+            flex-shrink: 0;
+            transition: background var(--transition-normal), border-color var(--transition-normal);
         }
+
+        .sidebar-section {
+            margin-bottom: 16px;
+        }
+
+        .sidebar-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--color-text-muted);
+            padding: 8px 16px;
+            margin-bottom: 4px;
+        }
+
         .sidebar-item {
-            padding: 14px 20px;
-            cursor: pointer;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             gap: 12px;
+            padding: 10px 16px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+            transition: all var(--transition-fast);
             position: relative;
-            overflow: hidden;
         }
-        .sidebar-item::before {
+
+        .sidebar-item:hover {
+            background: var(--color-accent-muted);
+            color: var(--color-text-primary);
+        }
+
+        .sidebar-item.active {
+            background: var(--color-accent-muted);
+            color: var(--color-accent);
+        }
+
+        .sidebar-item.active::before {
             content: '';
             position: absolute;
             left: 0;
             top: 50%;
             transform: translateY(-50%);
             width: 3px;
-            height: 0;
-            background: var(--accent-cyan);
+            height: 20px;
+            background: var(--color-accent);
             border-radius: 0 2px 2px 0;
-            transition: height 0.3s ease;
         }
-        .sidebar-item:hover {
-            color: var(--text-primary);
-            background: rgba(88, 166, 255, 0.08);
-        }
-        [data-theme="light"] .sidebar-item:hover {
-            background: rgba(9, 105, 218, 0.08);
-        }
-        .sidebar-item.active {
-            color: var(--accent-cyan);
-            background: rgba(88, 166, 255, 0.12);
-            box-shadow: var(--glow-cyan);
-        }
-        [data-theme="light"] .sidebar-item.active {
-            background: rgba(9, 105, 218, 0.1);
-        }
-        .sidebar-item.active::before {
-            height: 24px;
-        }
-        .sidebar-icon { font-size: 16px; width: 20px; text-align: center; }
 
-        /* Content */
+        .sidebar-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .sidebar-icon svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* ========================================
+           Content Area
+           ======================================== */
         .content {
             flex: 1;
             padding: 32px;
             overflow-y: auto;
-            background: transparent;
+            background: var(--color-bg-primary);
         }
 
-        /* Tools grid */
+        .content-header {
+            margin-bottom: 28px;
+        }
+
+        .content-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--color-text-primary);
+            letter-spacing: -0.02em;
+            margin-bottom: 6px;
+        }
+
+        .content-subtitle {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+        }
+
+        /* ========================================
+           Tools Grid
+           ======================================== */
         .tools-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-            gap: 24px;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
         }
 
-        /* Tool card */
+        /* ========================================
+           Tool Card
+           ======================================== */
         .tool-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 24px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease, border-color 0.3s ease;
-            position: relative;
-            overflow: hidden;
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            transition: all var(--transition-normal);
         }
-        .tool-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
+
         .tool-card:hover {
-            border-color: rgba(88, 166, 255, 0.3);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), var(--glow-cyan);
-            transform: translateY(-2px);
+            border-color: var(--color-accent);
+            box-shadow: var(--shadow-md);
         }
-        [data-theme="light"] .tool-card:hover {
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), var(--glow-cyan);
+
+        .tool-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
         }
-        .tool-card:hover::before {
-            opacity: 1;
+
+        .tool-card-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tool-card-title-icon {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--color-accent-muted);
+            border-radius: var(--radius-md);
+            color: var(--color-accent);
+        }
+
+        .tool-card-title-icon svg {
+            width: 18px;
+            height: 18px;
         }
 
         .tool-card h3 {
             font-size: 15px;
             font-weight: 600;
-            margin-bottom: 16px;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .tool-card h3 .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--accent-cyan);
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.8); }
+            color: var(--color-text-primary);
         }
 
-        /* Inputs */
-        .tool-card textarea,
-        .tool-card .el-input__wrapper {
+        .tool-card-badge {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: var(--color-bg-tertiary);
+            color: var(--color-text-muted);
+        }
+
+        /* ========================================
+           Form Elements
+           ======================================== */
+        .tool-input {
             width: 100%;
-            background: var(--bg-tertiary) !important;
-            border: 1px solid var(--border-color) !important;
-            border-radius: 8px !important;
+            margin-bottom: 12px;
+        }
+
+        .tool-input textarea,
+        .tool-input .el-input__wrapper {
+            width: 100%;
+            background: var(--color-bg-tertiary) !important;
+            border: 1px solid var(--color-border) !important;
+            border-radius: var(--radius-md) !important;
             box-shadow: none !important;
-            transition: all 0.3s ease;
+            transition: all var(--transition-fast);
         }
-        .tool-card textarea:focus,
-        .tool-card .el-input__wrapper:focus-within {
-            border-color: var(--accent-cyan) !important;
-            box-shadow: var(--glow-cyan) !important;
+
+        .tool-input textarea:focus,
+        .tool-input .el-input__wrapper:focus-within {
+            border-color: var(--color-accent) !important;
+            box-shadow: 0 0 0 3px var(--color-accent-muted) !important;
         }
-        .tool-card textarea {
-            padding: 12px 16px;
+
+        .tool-input textarea {
+            padding: 12px 14px;
             font-family: 'JetBrains Mono', monospace;
             font-size: 13px;
             line-height: 1.6;
             resize: vertical;
-            min-height: 100px;
-            color: var(--text-primary);
-        }
-        .tool-card .el-input__inner {
-            font-family: 'JetBrains Mono', monospace !important;
-            font-size: 13px !important;
-            color: var(--text-primary) !important;
-        }
-        .tool-card .el-input__inner::placeholder {
-            color: var(--text-muted) !important;
+            min-height: 88px;
+            color: var(--color-text-primary);
+            border: none;
+            outline: none;
         }
 
-        /* Extra params */
+        .tool-input textarea::placeholder {
+            color: var(--color-text-muted);
+        }
+
+        .tool-input .el-input__inner {
+            font-family: 'JetBrains Mono', monospace !important;
+            font-size: 13px !important;
+            color: var(--color-text-primary) !important;
+        }
+
+        .tool-input .el-input__inner::placeholder {
+            color: var(--color-text-muted) !important;
+        }
+
+        /* Extra Parameters */
         .extra-params {
             margin-top: 12px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
+            padding-top: 12px;
+            border-top: 1px solid var(--color-border-subtle);
         }
+
         .extra-params label {
             font-size: 12px;
-            color: var(--text-secondary);
             font-weight: 500;
-        }
-        .extra-params .el-input__wrapper {
-            background: var(--bg-secondary) !important;
+            color: var(--color-text-secondary);
+            display: block;
+            margin-bottom: 4px;
         }
 
-        /* Actions */
+        .extra-params .el-input__wrapper {
+            background: var(--color-bg-secondary) !important;
+        }
+
+        /* ========================================
+           Actions
+           ======================================== */
         .actions {
-            margin-top: 16px;
             display: flex;
             gap: 8px;
-        }
-        .actions .el-button {
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 13px;
-            padding: 8px 20px;
-            height: 36px;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-        }
-        .actions .el-button--primary {
-            background: var(--accent-cyan) !important;
-            border: 2px solid var(--accent-cyan) !important;
-            color: #ffffff !important;
-            box-shadow: 0 4px 16px rgba(88, 166, 255, 0.3);
-        }
-        .actions .el-button--primary:hover {
-            background: #79b8ff !important;
-            border-color: #79b8ff !important;
-            box-shadow: 0 6px 24px rgba(88, 166, 255, 0.5);
-            transform: translateY(-1px);
-        }
-        [data-theme="light"] .actions .el-button--primary {
-            color: #ffffff !important;
-        }
-        [data-theme="light"] .actions .el-button--primary:hover {
-            background: #0550ae !important;
-            border-color: #0550ae !important;
-        }
-        .actions .el-button--primary:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 8px rgba(88, 166, 255, 0.3);
-        }
-        .actions .el-button:not(.el-button--primary) {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-        }
-        .actions .el-button:not(.el-button--primary):hover {
-            background: var(--bg-secondary);
-            border-color: var(--text-muted);
-            color: var(--text-primary);
-        }
-        .actions .el-button:not(.el-button--primary):active {
-            background: var(--bg-primary);
+            margin-top: 16px;
         }
 
-        /* Result */
+        .actions .el-button {
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 13px;
+            padding: 0 18px;
+            height: 36px;
+            transition: all var(--transition-fast);
+            cursor: pointer;
+        }
+
+        .actions .el-button--primary {
+            background: var(--color-accent) !important;
+            border: 1px solid var(--color-accent) !important;
+            color: #ffffff !important;
+        }
+
+        .actions .el-button--primary:hover {
+            background: var(--color-accent-hover) !important;
+            border-color: var(--color-accent-hover) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(79, 143, 234, 0.3);
+        }
+
+        .actions .el-button--primary:active {
+            transform: translateY(0);
+        }
+
+        .actions .el-button:not(.el-button--primary) {
+            background: var(--color-bg-tertiary);
+            border: 1px solid var(--color-border);
+            color: var(--color-text-secondary);
+        }
+
+        .actions .el-button:not(.el-button--primary):hover {
+            background: var(--color-bg-elevated);
+            border-color: var(--color-text-muted);
+            color: var(--color-text-primary);
+        }
+
+        /* ========================================
+           Result Area
+           ======================================== */
         .result {
-            margin-top: 16px;
-            padding: 12px 16px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            min-height: 60px;
+            margin-top: 14px;
+            padding: 12px 14px;
+            background: var(--color-bg-tertiary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            min-height: 56px;
             font-family: 'JetBrains Mono', monospace;
             font-size: 13px;
             line-height: 1.6;
             word-break: break-all;
-            color: var(--accent-green);
-            cursor: pointer;
-            transition: all 0.3s ease;
+            color: var(--color-success);
+            cursor: text;
+            transition: all var(--transition-fast);
             user-select: text;
             -webkit-user-select: text;
         }
+
         .result:hover {
-            border-color: var(--accent-green);
-            box-shadow: var(--glow-green);
-        }
-        .result-placeholder {
-            color: var(--text-muted);
+            border-color: var(--color-success);
         }
 
-        /* Footer */
+        .result-placeholder {
+            color: var(--color-text-muted);
+            font-style: normal;
+        }
+
+        .result-error {
+            color: var(--color-error);
+        }
+
+        /* ========================================
+           Footer
+           ======================================== */
         .footer {
-            background: var(--bg-secondary);
-            border-top: 1px solid var(--border-color);
+            background: var(--color-bg-secondary);
+            border-top: 1px solid var(--color-border);
             padding: 20px 32px;
             text-align: center;
-            color: var(--text-muted);
+            color: var(--color-text-muted);
             font-size: 13px;
-            font-family: 'JetBrains Mono', monospace;
-            transition: background 0.3s ease, border-color 0.3s ease;
+            transition: background var(--transition-normal), border-color var(--transition-normal);
         }
-        .footer span { color: var(--accent-cyan); }
 
-        /* No input state */
+        .footer a {
+            color: var(--color-accent);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* ========================================
+           Empty State
+           ======================================== */
         .no-input {
-            color: var(--text-muted);
+            color: var(--color-text-muted);
             text-align: center;
-            padding: 20px;
+            padding: 24px;
             font-size: 13px;
         }
 
-        /* Animations */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
+        /* ========================================
+           Scrollbar
+           ======================================== */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--color-bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--color-border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--color-text-muted);
+        }
+
+        /* ========================================
+           Element Plus Overrides
+           ======================================== */
+        .el-message {
+            background: var(--color-bg-card) !important;
+            border-color: var(--color-border) !important;
+        }
+
+        .el-message__content {
+            color: var(--color-text-primary) !important;
+        }
+
+        .el-message--success {
+            background: var(--color-bg-card) !important;
+            border-color: var(--color-success) !important;
+        }
+
+        .el-message--error {
+            background: var(--color-bg-card) !important;
+            border-color: var(--color-error) !important;
+        }
+
+        .el-message--warning {
+            background: var(--color-bg-card) !important;
+            border-color: var(--color-warning) !important;
+        }
+
+        /* ========================================
+           Responsive
+           ======================================== */
+        @media (max-width: 768px) {
+            .header {
+                padding: 0 16px;
             }
-            to {
-                opacity: 1;
-                transform: translateY(0);
+
+            .sidebar {
+                display: none;
+            }
+
+            .content {
+                padding: 20px 16px;
+            }
+
+            .tools-grid {
+                grid-template-columns: 1fr;
             }
         }
-        .tool-card {
-            animation: fadeInUp 0.5s ease forwards;
+
+        /* ========================================
+           Focus States (Accessibility)
+           ======================================== */
+        :focus-visible {
+            outline: 2px solid var(--color-accent);
+            outline-offset: 2px;
         }
-        .tools-grid .tool-card:nth-child(1) { animation-delay: 0.05s; }
-        .tools-grid .tool-card:nth-child(2) { animation-delay: 0.1s; }
-        .tools-grid .tool-card:nth-child(3) { animation-delay: 0.15s; }
-        .tools-grid .tool-card:nth-child(4) { animation-delay: 0.2s; }
-        .tools-grid .tool-card:nth-child(5) { animation-delay: 0.25s; }
-        .tools-grid .tool-card:nth-child(6) { animation-delay: 0.3s; }
 
-        /* Custom scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
-        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
-
-        /* Element Plus overrides */
-        .el-message { background: var(--bg-card) !important; border-color: var(--border-color) !important; }
-        .el-message__content { color: var(--text-primary) !important; }
+        button:focus-visible,
+        .sidebar-item:focus-visible {
+            outline: 2px solid var(--color-accent);
+            outline-offset: 2px;
+        }
     </style>
 </head>
 <body>
 <div id="app">
+    <!-- Header -->
     <header class="header">
-        <h1>{{ t('app.title') }}</h1>
-        <div class="header-controls">
-            <div class="theme-toggle" @click="toggleTheme">
-                <span class="icon">{{ isDark ? '☀️' : '🌙' }}</span>
-                <span class="label">{{ isDark ? t('theme.light') : t('theme.dark') }}</span>
+        <div class="header-brand">
+            <div class="header-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                </svg>
             </div>
+            <h1>{{ t('app.title') }}</h1>
+        </div>
+        <div class="header-controls">
+            <button class="theme-toggle" @click="toggleTheme" :aria-label="isDark ? t('theme.switchToLight') : t('theme.switchToDark')">
+                <svg v-if="isDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"/>
+                    <line x1="12" y1="1" x2="12" y2="3"/>
+                    <line x1="12" y1="21" x2="12" y2="23"/>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                    <line x1="1" y1="12" x2="3" y2="12"/>
+                    <line x1="21" y1="12" x2="23" y2="12"/>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </svg>
+                <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </svg>
+                <span>{{ isDark ? t('theme.light') : t('theme.dark') }}</span>
+            </button>
             <div class="language-switch">
-                <el-button size="small" :class="{ 'is-type': locale === 'zh-CN' }" @click="switchLanguage('zh-CN')">中文</el-button>
-                <el-button size="small" :class="{ 'is-type': locale === 'en-US' }" @click="switchLanguage('en-US')">English</el-button>
+                <button :class="{active: locale === 'zh-CN'}" @click="switchLanguage('zh-CN')">中文</button>
+                <button :class="{active: locale === 'en-US'}" @click="switchLanguage('en-US')">EN</button>
             </div>
         </div>
     </header>
 
     <div class="main-container">
+        <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="sidebar-item" :class="{active: activeCategory === 'encoder'}" @click="activeCategory = 'encoder'">
-                <span class="sidebar-icon">🔤</span>
-                <span>{{ t('nav.encoder') }}</span>
-            </div>
-            <div class="sidebar-item" :class="{active: activeCategory === 'datetime'}" @click="activeCategory = 'datetime'">
-                <span class="sidebar-icon">📅</span>
-                <span>{{ t('nav.datetime') }}</span>
-            </div>
-            <div class="sidebar-item" :class="{active: activeCategory === 'formatter'}" @click="activeCategory = 'formatter'">
-                <span class="sidebar-icon">📄</span>
-                <span>{{ t('nav.formatter') }}</span>
-            </div>
-            <div class="sidebar-item" :class="{active: activeCategory === 'crypto'}" @click="activeCategory = 'crypto'">
-                <span class="sidebar-icon">🔐</span>
-                <span>{{ t('nav.crypto') }}</span>
-            </div>
-            <div class="sidebar-item" :class="{active: activeCategory === 'common'}" @click="activeCategory = 'common'">
-                <span class="sidebar-icon">🛠️</span>
-                <span>{{ t('nav.common') }}</span>
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">{{ t('sidebar.tools') }}</div>
+                <div class="sidebar-item" :class="{active: activeCategory === 'encoder'}" @click="activeCategory = 'encoder'" @keydown.enter="activeCategory = 'encoder'" tabindex="0">
+                    <span class="sidebar-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="4 7 4 4 20 4 20 7"/>
+                            <line x1="9" y1="20" x2="15" y2="20"/>
+                            <line x1="12" y1="4" x2="12" y2="20"/>
+                        </svg>
+                    </span>
+                    <span>{{ t('nav.encoder') }}</span>
+                </div>
+                <div class="sidebar-item" :class="{active: activeCategory === 'datetime'}" @click="activeCategory = 'datetime'" @keydown.enter="activeCategory = 'datetime'" tabindex="0">
+                    <span class="sidebar-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                    </span>
+                    <span>{{ t('nav.datetime') }}</span>
+                </div>
+                <div class="sidebar-item" :class="{active: activeCategory === 'formatter'}" @click="activeCategory = 'formatter'" @keydown.enter="activeCategory = 'formatter'" tabindex="0">
+                    <span class="sidebar-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                            <polyline points="10 9 9 9 8 9"/>
+                        </svg>
+                    </span>
+                    <span>{{ t('nav.formatter') }}</span>
+                </div>
+                <div class="sidebar-item" :class="{active: activeCategory === 'crypto'}" @click="activeCategory = 'crypto'" @keydown.enter="activeCategory = 'crypto'" tabindex="0">
+                    <span class="sidebar-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                    </span>
+                    <span>{{ t('nav.crypto') }}</span>
+                </div>
+                <div class="sidebar-item" :class="{active: activeCategory === 'common'}" @click="activeCategory = 'common'" @keydown.enter="activeCategory = 'common'" tabindex="0">
+                    <span class="sidebar-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        </svg>
+                    </span>
+                    <span>{{ t('nav.common') }}</span>
+                </div>
             </div>
         </aside>
 
+        <!-- Main Content -->
         <main class="content">
+            <div class="content-header">
+                <h2 class="content-title">{{ t('content.title') }}</h2>
+                <p class="content-subtitle">{{ t('content.subtitle') }}</p>
+            </div>
+
             <div class="tools-grid">
                 <div class="tool-card" v-for="tool in currentTools" :key="tool.id">
-                    <h3><span class="dot"></span>{{ tool.name }}</h3>
+                    <div class="tool-card-header">
+                        <div class="tool-card-title">
+                            <div class="tool-card-title-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="9 11 12 14 22 4"/>
+                                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                                </svg>
+                            </div>
+                            <h3>{{ tool.name }}</h3>
+                        </div>
+                    </div>
 
-                    <div v-if="tool.inputType === 'textarea'">
-                        <textarea v-model="tool.input" :placeholder="tool.inputPlaceholder || t('placeholder.input')" @keydown.ctrl.enter="executeTool(tool)"></textarea>
+                    <div class="tool-input" v-if="tool.inputType === 'textarea'">
+                        <textarea
+                            v-model="tool.input"
+                            :placeholder="tool.inputPlaceholder || t('placeholder.input')"
+                            @keydown.ctrl.enter="executeTool(tool)"
+                            rows="3"
+                        ></textarea>
                     </div>
-                    <div v-else-if="tool.inputType === 'text'">
-                        <el-input v-model="tool.input" :placeholder="tool.inputPlaceholder || t('placeholder.input')"></el-input>
+                    <div class="tool-input" v-else-if="tool.inputType === 'text'">
+                        <el-input
+                            v-model="tool.input"
+                            :placeholder="tool.inputPlaceholder || t('placeholder.input')"
+                        ></el-input>
                     </div>
-                    <div v-else-if="tool.inputType === 'none'" class="no-input">
+                    <div class="no-input" v-else-if="tool.inputType === 'none'">
                         {{ t('placeholder.none') }}
                     </div>
 
-                    <div v-if="tool.extraParams" class="extra-params">
+                    <div class="extra-params" v-if="tool.extraParams">
                         <template v-for="param in tool.extraParams" :key="param.key">
                             <label>{{ param.label }}</label>
                             <el-input v-model="tool.extraData[param.key]" :placeholder="param.placeholder"></el-input>
@@ -540,19 +813,27 @@
                     <div class="actions">
                         <el-button type="primary" @click="executeTool(tool)">{{ t('action.execute') }}</el-button>
                         <el-button @click="clearTool(tool)">{{ t('action.clear') }}</el-button>
-                        <el-button @click="copyResult(tool.result)">{{ t('action.copy') }}</el-button>
+                        <el-button @click="copyResult(tool.result)" :disabled="!tool.result">{{ t('action.copy') }}</el-button>
                     </div>
 
-                    <div class="result" :class="{'result-placeholder': !tool.result}" :ref="el => setResultRef(tool.id, el)" @click="focusResult(tool.id)" @keydown.ctrl.a.prevent="selectCurrentResult(tool.id)" tabindex="0">
-                        {{ tool.result || t('placeholder.output') }}
+                    <div
+                        class="result"
+                        :class="{'result-placeholder': !tool.result, 'result-error': tool.error}"
+                        :ref="el => setResultRef(tool.id, el)"
+                        @click="focusResult(tool.id)"
+                        @keydown.ctrl.a.prevent="selectCurrentResult(tool.id)"
+                        tabindex="0"
+                    >
+                        {{ tool.result || tool.error || t('placeholder.output') }}
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
+    <!-- Footer -->
     <footer class="footer">
-        <span>></span> Online Tools <span>//</span> 2026
+        <span>{{ t('footer.poweredBy') }} <a href="#">Online Tools</a> {{ t('footer.year') }}</span>
     </footer>
 </div>
 
@@ -571,7 +852,6 @@ const app = createApp({
         const resultRefs = ref({});
         const focusedResultId = ref(null);
         const translations = ref({});
-        const uiText = ref({});
 
         // Translation function
         const t = (key) => {
@@ -684,7 +964,8 @@ const app = createApp({
                 })) : null,
                 extraData: tool.extraData ? { ...tool.extraData } : null,
                 input: '',
-                result: ''
+                result: '',
+                error: ''
             }));
         };
 
@@ -759,7 +1040,7 @@ const app = createApp({
             let data = {};
             if (tool.inputType === 'textarea' || tool.inputType === 'text') {
                 if (!tool.input) {
-                    ElMessage.warning('请输入内容');
+                    ElMessage.warning(translations.value['message.inputRequired'] || '请输入内容');
                     return;
                 }
                 data.input = tool.input;
@@ -775,15 +1056,21 @@ const app = createApp({
                 const response = await axios.post(path, data);
                 if (response.data.success) {
                     tool.result = response.data.data;
-                    ElMessage.success('操作成功');
+                    tool.error = '';
+                    ElMessage.success(translations.value['message.success'] || '操作成功');
                 } else {
-                    ElMessage.error(response.data.error?.message || '操作失败');
+                    tool.error = response.data.error?.message || '操作失败';
+                    tool.result = '';
+                    ElMessage.error(tool.error);
                 }
             } catch (error) {
                 if (error.response?.status === 429) {
-                    ElMessage.error('请求过于频繁，请稍后再试');
+                    ElMessage.error(translations.value['message.rateLimit'] || '请求过于频繁，请稍后再试');
                 } else {
-                    ElMessage.error('请求失败: ' + (error.response?.data?.error?.message || error.message));
+                    const errorMsg = error.response?.data?.error?.message || error.message;
+                    tool.error = errorMsg;
+                    tool.result = '';
+                    ElMessage.error(translations.value['message.error'] + ': ' + errorMsg || '请求失败: ' + errorMsg);
                 }
             }
         };
@@ -791,6 +1078,7 @@ const app = createApp({
         const clearTool = (tool) => {
             tool.input = '';
             tool.result = '';
+            tool.error = '';
             if (tool.extraData) {
                 Object.keys(tool.extraData).forEach(key => {
                     tool.extraData[key] = '';
@@ -801,9 +1089,9 @@ const app = createApp({
         const copyResult = (text) => {
             if (!text) return;
             navigator.clipboard.writeText(text).then(() => {
-                ElMessage.success('已复制到剪贴板');
+                ElMessage.success(translations.value['message.copied'] || '已复制到剪贴板');
             }).catch(() => {
-                ElMessage.error('复制失败');
+                ElMessage.error(translations.value['message.copyFailed'] || '复制失败');
             });
         };
 
