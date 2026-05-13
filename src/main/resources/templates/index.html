@@ -598,8 +598,9 @@ const app = createApp({
             }
             document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light');
 
-            // Load translations
+            // Load translations and initialize tools
             await fetchTranslations('zh-CN');
+            initTools();
         });
 
         const toggleTheme = () => {
@@ -665,34 +666,43 @@ const app = createApp({
             { id: 'test-regex', category: 'common', nameKey: 'tool.testRegex', inputType: 'textarea', placeholderKey: 'placeholder.regex', extraParams: [{key: 'pattern', labelKey: 'label.pattern', placeholderKey: 'placeholder.pattern', defaultValue: ''}], extraData: {pattern: ''} },
         ];
 
-        const tools = computed(() => {
-            return toolDefs.map(tool => {
-                const result = {
-                    id: tool.id,
-                    category: tool.category,
-                    inputType: tool.inputType,
-                    name: translations.value[tool.nameKey] || tool.nameKey,
-                    inputPlaceholder: translations.value[tool.placeholderKey] || tool.placeholderKey,
-                    extraParams: tool.extraParams ? tool.extraParams.map(p => ({
-                        key: p.key,
-                        label: translations.value[p.labelKey] || p.labelKey,
-                        placeholder: translations.value[p.placeholderKey] || p.placeholderKey
-                    })) : null,
-                    extraData: tool.extraData ? { ...tool.extraData } : null,
-                    input: '',
-                    result: ''
-                };
-                // Initialize extraData with default values
+        // Initialize tools as ref to preserve user input when language changes
+        const tools = ref([]);
+
+        // Initialize tools with translations
+        const initTools = () => {
+            tools.value = toolDefs.map(tool => ({
+                id: tool.id,
+                category: tool.category,
+                inputType: tool.inputType,
+                name: translations.value[tool.nameKey] || tool.nameKey,
+                inputPlaceholder: translations.value[tool.placeholderKey] || tool.placeholderKey,
+                extraParams: tool.extraParams ? tool.extraParams.map(p => ({
+                    key: p.key,
+                    label: translations.value[p.labelKey] || p.labelKey,
+                    placeholder: translations.value[p.placeholderKey] || p.placeholderKey
+                })) : null,
+                extraData: tool.extraData ? { ...tool.extraData } : null,
+                input: '',
+                result: ''
+            }));
+        };
+
+        // Update only translatable properties without losing user input
+        const updateToolTranslations = () => {
+            tools.value.forEach((tool, index) => {
+                const def = toolDefs[index];
+                tool.name = translations.value[def.nameKey] || def.nameKey;
+                tool.inputPlaceholder = translations.value[def.placeholderKey] || def.placeholderKey;
                 if (tool.extraParams) {
-                    tool.extraParams.forEach(p => {
-                        if (p.defaultValue !== undefined) {
-                            result.extraData[p.key] = p.defaultValue;
-                        }
+                    tool.extraParams.forEach((param, paramIndex) => {
+                        const defParam = def.extraParams[paramIndex];
+                        param.label = translations.value[defParam.labelKey] || defParam.labelKey;
+                        param.placeholder = translations.value[defParam.placeholderKey] || defParam.placeholderKey;
                     });
                 }
-                return result;
             });
-        });
+        };
 
         const currentTools = computed(() => {
             return tools.value.filter(t => t.category === activeCategory.value);
@@ -701,6 +711,7 @@ const app = createApp({
         const switchLanguage = async (lang) => {
             locale.value = lang;
             await fetchTranslations(lang);
+            updateToolTranslations();
         };
 
         const getApiPath = (toolId) => {
