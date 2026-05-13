@@ -4,54 +4,521 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="#{app.title}">在线工具箱</title>
-    <link rel="stylesheet" th:href="@{/webjars/element-plus/2.6.3/theme-chalk/index.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/element-plus.css}">
     <style>
+        /* Light Theme Variables */
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f6f8fa;
+            --bg-tertiary: #eaeef2;
+            --bg-card: #ffffff;
+            --accent-cyan: #0969da;
+            --accent-green: #1a7f37;
+            --accent-orange: #bf8700;
+            --accent-purple: #8250df;
+            --accent-red: #cf222e;
+            --text-primary: #1f2328;
+            --text-secondary: #656d76;
+            --text-muted: #8b949e;
+            --border-color: #d0d7de;
+            --glow-cyan: 0 0 20px rgba(9, 105, 218, 0.15);
+            --glow-green: 0 0 20px rgba(26, 127, 55, 0.15);
+        }
+
+        /* Dark Theme Variables (default) */
+        :root {
+            --bg-primary: #0a0e14;
+            --bg-secondary: #0d1117;
+            --bg-tertiary: #161b22;
+            --bg-card: #1c2128;
+            --accent-cyan: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-orange: #f0883e;
+            --accent-purple: #a371f7;
+            --accent-red: #f85149;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #484f58;
+            --border-color: #30363d;
+            --glow-cyan: 0 0 20px rgba(88, 166, 255, 0.3);
+            --glow-green: 0 0 20px rgba(63, 185, 80, 0.3);
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-        #app { min-height: 100vh; display: flex; flex-direction: column; }
-        .header { background: #409EFF; color: white; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
-        .header h1 { font-size: 20px; }
+        body {
+            font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        /* Background grid pattern - only for dark */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(88, 166, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(88, 166, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+        [data-theme="light"] body::before {
+            background-image:
+                linear-gradient(rgba(9, 105, 218, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(9, 105, 218, 0.05) 1px, transparent 1px);
+        }
+
+        #app { min-height: 100vh; display: flex; flex-direction: column; position: relative; z-index: 1; }
+
+        /* Header */
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 20px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+            opacity: 0.5;
+        }
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .header h1::before {
+            content: '>';
+            color: var(--accent-green);
+            font-family: 'JetBrains Mono', monospace;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* Header controls */
+        .header-controls {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        /* Theme toggle */
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .theme-toggle:hover {
+            border-color: var(--accent-cyan);
+        }
+        .theme-toggle .icon {
+            font-size: 16px;
+            line-height: 1;
+        }
+        .theme-toggle .label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        /* Language switch */
+        .language-switch { display: flex; gap: 4px; }
+        .language-switch .el-button {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+        .language-switch .el-button:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+        .language-switch .el-button.is-type {
+            background: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+            color: var(--bg-primary);
+        }
+
+        /* Main container */
         .main-container { display: flex; flex: 1; }
-        .sidebar { width: 200px; background: #f5f7fa; padding: 16px; }
-        .sidebar-item { padding: 12px 16px; cursor: pointer; border-radius: 4px; margin-bottom: 4px; transition: all 0.3s; }
-        .sidebar-item:hover, .sidebar-item.active { background: #409EFF; color: white; }
-        .content { flex: 1; padding: 24px; overflow-y: auto; background: #f0f2f5; }
-        .tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 16px; }
-        .tool-card { background: white; border-radius: 8px; padding: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
-        .tool-card h3 { font-size: 16px; margin-bottom: 12px; color: #303133; }
-        .tool-card textarea { width: 100%; height: 100px; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; resize: vertical; font-family: monospace; }
-        .tool-card .result { margin-top: 12px; padding: 8px; background: #f5f7fa; border-radius: 4px; min-height: 60px; word-break: break-all; font-family: monospace; font-size: 13px; user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; }
-        .tool-card .actions { margin-top: 12px; display: flex; gap: 8px; }
-        .input-row { margin-bottom: 12px; }
-        .input-row label { display: block; margin-bottom: 4px; font-size: 14px; color: #606266; }
-        .footer { background: #f5f7fa; padding: 16px; text-align: center; color: #909399; font-size: 14px; }
-        .language-switch { display: flex; gap: 8px; }
-        .no-input { color: #909399; text-align: center; padding: 20px; }
+
+        /* Sidebar */
+        .sidebar {
+            width: 220px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+        .sidebar-item {
+            padding: 14px 20px;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        .sidebar-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 0;
+            background: var(--accent-cyan);
+            border-radius: 0 2px 2px 0;
+            transition: height 0.3s ease;
+        }
+        .sidebar-item:hover {
+            color: var(--text-primary);
+            background: rgba(88, 166, 255, 0.08);
+        }
+        [data-theme="light"] .sidebar-item:hover {
+            background: rgba(9, 105, 218, 0.08);
+        }
+        .sidebar-item.active {
+            color: var(--accent-cyan);
+            background: rgba(88, 166, 255, 0.12);
+            box-shadow: var(--glow-cyan);
+        }
+        [data-theme="light"] .sidebar-item.active {
+            background: rgba(9, 105, 218, 0.1);
+        }
+        .sidebar-item.active::before {
+            height: 24px;
+        }
+        .sidebar-icon { font-size: 16px; width: 20px; text-align: center; }
+
+        /* Content */
+        .content {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            background: transparent;
+        }
+
+        /* Tools grid */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 24px;
+        }
+
+        /* Tool card */
+        .tool-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease, border-color 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .tool-card:hover {
+            border-color: rgba(88, 166, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), var(--glow-cyan);
+            transform: translateY(-2px);
+        }
+        [data-theme="light"] .tool-card:hover {
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), var(--glow-cyan);
+        }
+        .tool-card:hover::before {
+            opacity: 1;
+        }
+
+        .tool-card h3 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tool-card h3 .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        /* Inputs */
+        .tool-card textarea,
+        .tool-card .el-input__wrapper {
+            width: 100%;
+            background: var(--bg-tertiary) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 8px !important;
+            box-shadow: none !important;
+            transition: all 0.3s ease;
+        }
+        .tool-card textarea:focus,
+        .tool-card .el-input__wrapper:focus-within {
+            border-color: var(--accent-cyan) !important;
+            box-shadow: var(--glow-cyan) !important;
+        }
+        .tool-card textarea {
+            padding: 12px 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            resize: vertical;
+            min-height: 100px;
+            color: var(--text-primary);
+        }
+        .tool-card .el-input__inner {
+            font-family: 'JetBrains Mono', monospace !important;
+            font-size: 13px !important;
+            color: var(--text-primary) !important;
+        }
+        .tool-card .el-input__inner::placeholder {
+            color: var(--text-muted) !important;
+        }
+
+        /* Extra params */
+        .extra-params {
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .extra-params label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .extra-params .el-input__wrapper {
+            background: var(--bg-secondary) !important;
+        }
+
+        /* Actions */
+        .actions {
+            margin-top: 16px;
+            display: flex;
+            gap: 8px;
+        }
+        .actions .el-button {
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 8px 20px;
+            height: 36px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        .actions .el-button--primary {
+            background: var(--accent-cyan) !important;
+            border: 2px solid var(--accent-cyan) !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 16px rgba(88, 166, 255, 0.3);
+        }
+        .actions .el-button--primary:hover {
+            background: #79b8ff !important;
+            border-color: #79b8ff !important;
+            box-shadow: 0 6px 24px rgba(88, 166, 255, 0.5);
+            transform: translateY(-1px);
+        }
+        [data-theme="light"] .actions .el-button--primary {
+            color: #ffffff !important;
+        }
+        [data-theme="light"] .actions .el-button--primary:hover {
+            background: #0550ae !important;
+            border-color: #0550ae !important;
+        }
+        .actions .el-button--primary:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(88, 166, 255, 0.3);
+        }
+        .actions .el-button:not(.el-button--primary) {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+        .actions .el-button:not(.el-button--primary):hover {
+            background: var(--bg-secondary);
+            border-color: var(--text-muted);
+            color: var(--text-primary);
+        }
+        .actions .el-button:not(.el-button--primary):active {
+            background: var(--bg-primary);
+        }
+
+        /* Result */
+        .result {
+            margin-top: 16px;
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            min-height: 60px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            word-break: break-all;
+            color: var(--accent-green);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+        .result:hover {
+            border-color: var(--accent-green);
+            box-shadow: var(--glow-green);
+        }
+        .result-placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 20px 32px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-family: 'JetBrains Mono', monospace;
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+        .footer span { color: var(--accent-cyan); }
+
+        /* No input state */
+        .no-input {
+            color: var(--text-muted);
+            text-align: center;
+            padding: 20px;
+            font-size: 13px;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .tool-card {
+            animation: fadeInUp 0.5s ease forwards;
+        }
+        .tools-grid .tool-card:nth-child(1) { animation-delay: 0.05s; }
+        .tools-grid .tool-card:nth-child(2) { animation-delay: 0.1s; }
+        .tools-grid .tool-card:nth-child(3) { animation-delay: 0.15s; }
+        .tools-grid .tool-card:nth-child(4) { animation-delay: 0.2s; }
+        .tools-grid .tool-card:nth-child(5) { animation-delay: 0.25s; }
+        .tools-grid .tool-card:nth-child(6) { animation-delay: 0.3s; }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        /* Element Plus overrides */
+        .el-message { background: var(--bg-card) !important; border-color: var(--border-color) !important; }
+        .el-message__content { color: var(--text-primary) !important; }
     </style>
 </head>
 <body>
 <div id="app">
     <header class="header">
         <h1 th:text="#{app.title}">在线工具箱</h1>
-        <div class="language-switch">
-            <el-button size="small" :type="locale === 'zh-CN' ? 'primary' : ''" @click="switchLanguage('zh-CN')">中文</el-button>
-            <el-button size="small" :type="locale === 'en-US' ? 'primary' : ''" @click="switchLanguage('en-US')">English</el-button>
+        <div class="header-controls">
+            <div class="theme-toggle" @click="toggleTheme">
+                <span class="icon">{{ isDark ? '☀️' : '🌙' }}</span>
+                <span class="label">{{ isDark ? '浅色' : '深色' }}</span>
+            </div>
+            <div class="language-switch">
+                <el-button size="small" :class="{ 'is-type': locale === 'zh-CN' }" @click="switchLanguage('zh-CN')">中文</el-button>
+                <el-button size="small" :class="{ 'is-type': locale === 'en-US' }" @click="switchLanguage('en-US')">English</el-button>
+            </div>
         </div>
     </header>
 
     <div class="main-container">
         <aside class="sidebar">
-            <div class="sidebar-item" :class="{active: activeCategory === 'encoder'}" @click="activeCategory = 'encoder'" th:text="#{nav.encoder}">编码解码</div>
-            <div class="sidebar-item" :class="{active: activeCategory === 'datetime'}" @click="activeCategory = 'datetime'" th:text="#{nav.datetime}">日期时间</div>
-            <div class="sidebar-item" :class="{active: activeCategory === 'formatter'}" @click="activeCategory = 'formatter'" th:text="#{nav.formatter}">格式化</div>
-            <div class="sidebar-item" :class="{active: activeCategory === 'crypto'}" @click="activeCategory = 'crypto'" th:text="#{nav.crypto}">加解密</div>
-            <div class="sidebar-item" :class="{active: activeCategory === 'common'}" @click="activeCategory = 'common'" th:text="#{nav.common}">其他工具</div>
+            <div class="sidebar-item" :class="{active: activeCategory === 'encoder'}" @click="activeCategory = 'encoder'">
+                <span class="sidebar-icon">🔤</span>
+                <span th:text="#{nav.encoder}">编码解码</span>
+            </div>
+            <div class="sidebar-item" :class="{active: activeCategory === 'datetime'}" @click="activeCategory = 'datetime'">
+                <span class="sidebar-icon">📅</span>
+                <span th:text="#{nav.datetime}">日期时间</span>
+            </div>
+            <div class="sidebar-item" :class="{active: activeCategory === 'formatter'}" @click="activeCategory = 'formatter'">
+                <span class="sidebar-icon">📄</span>
+                <span th:text="#{nav.formatter}">格式化</span>
+            </div>
+            <div class="sidebar-item" :class="{active: activeCategory === 'crypto'}" @click="activeCategory = 'crypto'">
+                <span class="sidebar-icon">🔐</span>
+                <span th:text="#{nav.crypto}">加解密</span>
+            </div>
+            <div class="sidebar-item" :class="{active: activeCategory === 'common'}" @click="activeCategory = 'common'">
+                <span class="sidebar-icon">🛠️</span>
+                <span th:text="#{nav.common}">其他工具</span>
+            </div>
         </aside>
 
         <main class="content">
             <div class="tools-grid">
                 <div class="tool-card" v-for="tool in currentTools" :key="tool.id">
-                    <h3>{{ tool.name }}</h3>
+                    <h3><span class="dot"></span>{{ tool.name }}</h3>
 
                     <div v-if="tool.inputType === 'textarea'">
                         <textarea v-model="tool.input" :placeholder="tool.inputPlaceholder || '请输入内容'" @keydown.ctrl.enter="executeTool(tool)"></textarea>
@@ -63,7 +530,7 @@
                         点击执行按钮即可
                     </div>
 
-                    <div v-if="tool.extraParams" class="input-row" style="margin-top: 8px;">
+                    <div v-if="tool.extraParams" class="extra-params">
                         <template v-for="param in tool.extraParams" :key="param.key">
                             <label>{{ param.label }}</label>
                             <el-input v-model="tool.extraData[param.key]" :placeholder="param.placeholder"></el-input>
@@ -71,36 +538,56 @@
                     </div>
 
                     <div class="actions">
-                        <el-button type="primary" size="small" @click="executeTool(tool)" th:text="#{action.execute}">执行</el-button>
-                        <el-button size="small" @click="clearTool(tool)" th:text="#{action.clear}">清空</el-button>
-                        <el-button size="small" @click="copyResult(tool.result)" th:text="#{action.copy}">复制</el-button>
+                        <el-button type="primary" @click="executeTool(tool)" th:text="#{action.execute}">执行</el-button>
+                        <el-button @click="clearTool(tool)" th:text="#{action.clear}">清空</el-button>
+                        <el-button @click="copyResult(tool.result)" th:text="#{action.copy}">复制</el-button>
                     </div>
 
-                    <div class="result" :ref="el => setResultRef(tool.id, el)" @click="focusResult(tool.id)" @keydown.ctrl.a.prevent="selectCurrentResult(tool.id)" tabindex="0">{{ tool.result || '输出结果' }}</div>
+                    <div class="result" :class="{'result-placeholder': !tool.result}" :ref="el => setResultRef(tool.id, el)" @click="focusResult(tool.id)" @keydown.ctrl.a.prevent="selectCurrentResult(tool.id)" tabindex="0">
+                        {{ tool.result || '输出结果' }}
+                    </div>
                 </div>
             </div>
         </main>
     </div>
 
     <footer class="footer">
-        &copy; 2026 Online Tools. All rights reserved.
+        <span>></span> Online Tools <span>//</span> 2026
     </footer>
 </div>
 
 <script src="https://unpkg.com/vue@3.4.21/dist/vue.global.prod.js"></script>
 <script src="https://unpkg.com/element-plus@2.6.3/dist/index.full.js"></script>
 <script src="https://unpkg.com/axios@1.6.8/dist/axios.min.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/element-plus@2.6.3/theme-chalk/index.css">
 <script th:inline="javascript">
-const { createApp, ref, computed, onMounted } = Vue;
+const { createApp, ref, computed, onMounted, watch } = Vue;
 const { ElMessage } = ElementPlus;
 
 const app = createApp({
     setup() {
         const locale = ref('zh-CN');
         const activeCategory = ref('encoder');
+        const isDark = ref(true);
         const resultRefs = ref({});
         const focusedResultId = ref(null);
+
+        // Initialize theme from localStorage
+        onMounted(() => {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                isDark.value = savedTheme === 'dark';
+            } else {
+                isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            }
+            document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light');
+        });
+
+        const toggleTheme = () => {
+            isDark.value = !isDark.value;
+            const theme = isDark.value ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+        };
 
         const setResultRef = (id, el) => {
             if (el) resultRefs.value[id] = el;
@@ -269,6 +756,8 @@ const app = createApp({
 
         return {
             locale,
+            isDark,
+            toggleTheme,
             activeCategory,
             currentTools,
             switchLanguage,
