@@ -24,10 +24,14 @@ public class I18nController {
 
         String[] keys = {
             "app.title",
+            "sidebar.tools",
+            "content.title", "content.subtitle",
+            "footer.poweredBy", "footer.year",
             "nav.encoder", "nav.datetime", "nav.formatter", "nav.crypto", "nav.common",
             "action.execute", "action.clear", "action.copy",
             "placeholder.input", "placeholder.output", "placeholder.none",
-            "theme.light", "theme.dark",
+            "theme.light", "theme.dark", "theme.switchToLight", "theme.switchToDark",
+            "message.inputRequired", "message.success", "message.error", "message.rateLimit", "message.copied", "message.copyFailed",
             "tool.base64Encode", "tool.base64Decode", "tool.urlEncode", "tool.urlDecode",
             "tool.htmlEscape", "tool.htmlUnescape", "tool.unicodeEncode", "tool.unicodeDecode",
             "tool.currentTimestamp", "tool.timestampToDate", "tool.dateToTimestamp",
