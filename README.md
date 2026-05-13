@@ -67,8 +67,8 @@ java -jar target/tools-service-1.0.0.jar
 
 ### 访问
 
-- **首页**: http://localhost:8080
-- **API端点**: http://localhost:8080/api/*
+- **首页**: http://localhost:18888
+- **API端点**: http://localhost:18888/api/*
 
 ## API 文档
 
@@ -141,7 +141,7 @@ java -jar target/tools-service-1.0.0.jar
 
 **请求**:
 ```bash
-curl -X POST http://localhost:8080/api/encode/base64 \
+curl -X POST http://localhost:18888/api/encode/base64 \
   -H "Content-Type: application/json" \
   -d '{"input":"Hello World"}'
 ```
@@ -185,7 +185,7 @@ curl -X POST http://localhost:8080/api/encode/base64 \
 
 ```yaml
 server:
-  port: 8080
+  port: 18888
 
 spring:
   messages:
