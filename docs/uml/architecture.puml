@@ -111,6 +111,7 @@ end note
 
 note bottom of DateTimeSvc
   职责：时间戳、日期格式、时区转换
+  特性：自动识别秒/毫秒、支持纯日期格式
   充血模型：日期计算逻辑内聚
 end note
 

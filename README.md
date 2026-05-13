@@ -89,9 +89,9 @@ java -jar target/tools-service-1.0.0.jar
 
 | 方法 | 路径 | 描述 |
 |------|------|------|
-| GET | `/api/datetime/timestamp` | 获取当前时间戳 |
-| POST | `/api/datetime/timestamp-to-date` | 时间戳转日期 |
-| POST | `/api/datetime/date-to-timestamp` | 日期转时间戳 |
+| GET/POST | `/api/datetime/timestamp` | 获取当前时间戳 |
+| POST | `/api/datetime/timestamp-to-date` | 时间戳转日期（自动识别秒/毫秒）|
+| POST | `/api/datetime/date-to-timestamp` | 日期转时间戳（支持纯日期格式）|
 | POST | `/api/datetime/convert-format` | 日期格式转换 |
 | POST | `/api/datetime/convert-timezone` | 时区转换 |
 | POST | `/api/datetime/days-between` | 计算日期间隔 |

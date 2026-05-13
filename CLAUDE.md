@@ -34,3 +34,11 @@ mvn clean package
 - 使用 `ToolResultFactory.success(data)` 或 `ToolResultFactory.error(code, message)` 构建响应
 - 限流基于 IP 的滑动窗口算法，可通过 `application.yml` 中的 `tools.ratelimit.*` 配置
 - 国际化：中文 `messages.properties` 和英文 `messages_en.properties`
+
+## API 约定
+
+- 前端请求统一使用 `input` 作为输入字段名
+- 后端接口需兼容 `input` 和原有字段名（如 `timestamp`、`dateStr` 等），使用 `body.getOrDefault("input", body.get("原始字段名"))` 获取值
+- 时间戳接口支持 GET 和 POST 两种方法
+- 时间戳转换自动识别秒（10位）和毫秒（13位）格式
+- 日期转时间戳支持纯日期格式（如 `yyyy-MM-dd`）和日期时间格式
