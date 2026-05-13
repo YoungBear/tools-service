@@ -25,6 +25,10 @@ public class DateTimeServiceImpl implements DateTimeService {
         }
         try {
             long ts = Long.parseLong(timestamp);
+            // Auto-detect: if 10 digits or fewer, treat as seconds; otherwise as milliseconds
+            if (timestamp.length() <= 10) {
+                ts = ts * 1000;
+            }
             LocalDateTime dateTime = LocalDateTime.ofInstant(
                     Instant.ofEpochMilli(ts), ZoneId.systemDefault());
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern(
@@ -41,10 +45,17 @@ public class DateTimeServiceImpl implements DateTimeService {
             return ToolResultFactory.fail("Date string cannot be null or empty");
         }
         try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(
-                    format != null && !format.isEmpty() ? format : "yyyy-MM-dd HH:mm:ss");
-            LocalDateTime dateTime = LocalDateTime.parse(dateStr, formatter);
-            long timestamp = dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+            String fmt = format != null && !format.isEmpty() ? format : "yyyy-MM-dd HH:mm:ss";
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(fmt);
+            long timestamp;
+            // Check if format contains time components
+            if (fmt.contains("HH") || fmt.contains("mm") || fmt.contains("ss")) {
+                LocalDateTime dateTime = LocalDateTime.parse(dateStr, formatter);
+                timestamp = dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+            } else {
+                LocalDate date = LocalDate.parse(dateStr, formatter);
+                timestamp = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
+            }
             return ToolResultFactory.ok(String.valueOf(timestamp));
         } catch (Exception e) {
             return ToolResultFactory.fail("Invalid date format");

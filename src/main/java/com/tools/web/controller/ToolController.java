@@ -192,18 +192,27 @@ public class ToolController {
         return ResponseEntity.ok(toResponse(dateTimeService.getCurrentTimestamp()));
     }
 
+    @PostMapping("/datetime/timestamp")
+    public ResponseEntity<ToolResponseDTO> getCurrentTimestampPost(HttpServletRequest request) {
+        return getCurrentTimestamp(request);
+    }
+
     @PostMapping("/datetime/timestamp-to-date")
     public ResponseEntity<ToolResponseDTO> timestampToDate(@RequestBody Map<String, String> body, HttpServletRequest request) {
         ResponseEntity<ToolResponseDTO> limitCheck = checkRateLimit(request);
         if (limitCheck != null) return limitCheck;
-        return ResponseEntity.ok(toResponse(dateTimeService.timestampToDate(body.get("timestamp"), body.get("format"))));
+        String timestamp = body.getOrDefault("input", body.get("timestamp"));
+        String format = body.getOrDefault("format", "yyyy-MM-dd HH:mm:ss");
+        return ResponseEntity.ok(toResponse(dateTimeService.timestampToDate(timestamp, format)));
     }
 
     @PostMapping("/datetime/date-to-timestamp")
     public ResponseEntity<ToolResponseDTO> dateToTimestamp(@RequestBody Map<String, String> body, HttpServletRequest request) {
         ResponseEntity<ToolResponseDTO> limitCheck = checkRateLimit(request);
         if (limitCheck != null) return limitCheck;
-        return ResponseEntity.ok(toResponse(dateTimeService.dateToTimestamp(body.get("dateStr"), body.get("format"))));
+        String dateStr = body.getOrDefault("input", body.get("dateStr"));
+        String format = body.getOrDefault("format", "yyyy-MM-dd HH:mm:ss");
+        return ResponseEntity.ok(toResponse(dateTimeService.dateToTimestamp(dateStr, format)));
     }
 
     @PostMapping("/datetime/convert-format")
