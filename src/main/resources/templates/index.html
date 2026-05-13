@@ -8,25 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/element-plus.css}">
     <style>
-        /* Light Theme Variables */
-        [data-theme="light"] {
-            --bg-primary: #ffffff;
-            --bg-secondary: #f6f8fa;
-            --bg-tertiary: #eaeef2;
-            --bg-card: #ffffff;
-            --accent-cyan: #0969da;
-            --accent-green: #1a7f37;
-            --accent-orange: #bf8700;
-            --accent-purple: #8250df;
-            --accent-red: #cf222e;
-            --text-primary: #1f2328;
-            --text-secondary: #656d76;
-            --text-muted: #8b949e;
-            --border-color: #d0d7de;
-            --glow-cyan: 0 0 20px rgba(9, 105, 218, 0.15);
-            --glow-green: 0 0 20px rgba(26, 127, 55, 0.15);
-        }
-
         /* Dark Theme Variables (default) */
         :root {
             --bg-primary: #0a0e14;
@@ -44,6 +25,25 @@
             --border-color: #30363d;
             --glow-cyan: 0 0 20px rgba(88, 166, 255, 0.3);
             --glow-green: 0 0 20px rgba(63, 185, 80, 0.3);
+        }
+
+        /* Light Theme Variables (override :root) */
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f6f8fa;
+            --bg-tertiary: #eaeef2;
+            --bg-card: #ffffff;
+            --accent-cyan: #0969da;
+            --accent-green: #1a7f37;
+            --accent-orange: #bf8700;
+            --accent-purple: #8250df;
+            --accent-red: #cf222e;
+            --text-primary: #1f2328;
+            --text-secondary: #656d76;
+            --text-muted: #8b949e;
+            --border-color: #d0d7de;
+            --glow-cyan: 0 0 20px rgba(9, 105, 218, 0.15);
+            --glow-green: 0 0 20px rgba(26, 127, 55, 0.15);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
