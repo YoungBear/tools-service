@@ -7,7 +7,7 @@ spring:
     name: tools-service
   messages:
     basename: messages
-    default-locale: zh_CN
+    default-locale: zh-CN
   thymeleaf:
     prefix: classpath:/templates/
     suffix: .html

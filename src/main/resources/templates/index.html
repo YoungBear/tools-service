@@ -478,11 +478,11 @@
 <body>
 <div id="app">
     <header class="header">
-        <h1 th:text="#{app.title}">在线工具箱</h1>
+        <h1>{{ t('app.title') }}</h1>
         <div class="header-controls">
             <div class="theme-toggle" @click="toggleTheme">
                 <span class="icon">{{ isDark ? '☀️' : '🌙' }}</span>
-                <span class="label">{{ isDark ? '浅色' : '深色' }}</span>
+                <span class="label">{{ isDark ? t('theme.light') : t('theme.dark') }}</span>
             </div>
             <div class="language-switch">
                 <el-button size="small" :class="{ 'is-type': locale === 'zh-CN' }" @click="switchLanguage('zh-CN')">中文</el-button>
@@ -495,23 +495,23 @@
         <aside class="sidebar">
             <div class="sidebar-item" :class="{active: activeCategory === 'encoder'}" @click="activeCategory = 'encoder'">
                 <span class="sidebar-icon">🔤</span>
-                <span th:text="#{nav.encoder}">编码解码</span>
+                <span>{{ t('nav.encoder') }}</span>
             </div>
             <div class="sidebar-item" :class="{active: activeCategory === 'datetime'}" @click="activeCategory = 'datetime'">
                 <span class="sidebar-icon">📅</span>
-                <span th:text="#{nav.datetime}">日期时间</span>
+                <span>{{ t('nav.datetime') }}</span>
             </div>
             <div class="sidebar-item" :class="{active: activeCategory === 'formatter'}" @click="activeCategory = 'formatter'">
                 <span class="sidebar-icon">📄</span>
-                <span th:text="#{nav.formatter}">格式化</span>
+                <span>{{ t('nav.formatter') }}</span>
             </div>
             <div class="sidebar-item" :class="{active: activeCategory === 'crypto'}" @click="activeCategory = 'crypto'">
                 <span class="sidebar-icon">🔐</span>
-                <span th:text="#{nav.crypto}">加解密</span>
+                <span>{{ t('nav.crypto') }}</span>
             </div>
             <div class="sidebar-item" :class="{active: activeCategory === 'common'}" @click="activeCategory = 'common'">
                 <span class="sidebar-icon">🛠️</span>
-                <span th:text="#{nav.common}">其他工具</span>
+                <span>{{ t('nav.common') }}</span>
             </div>
         </aside>
 
@@ -521,13 +521,13 @@
                     <h3><span class="dot"></span>{{ tool.name }}</h3>
 
                     <div v-if="tool.inputType === 'textarea'">
-                        <textarea v-model="tool.input" :placeholder="tool.inputPlaceholder || '请输入内容'" @keydown.ctrl.enter="executeTool(tool)"></textarea>
+                        <textarea v-model="tool.input" :placeholder="tool.inputPlaceholder || t('placeholder.input')" @keydown.ctrl.enter="executeTool(tool)"></textarea>
                     </div>
                     <div v-else-if="tool.inputType === 'text'">
-                        <el-input v-model="tool.input" :placeholder="tool.inputPlaceholder || '请输入内容'"></el-input>
+                        <el-input v-model="tool.input" :placeholder="tool.inputPlaceholder || t('placeholder.input')"></el-input>
                     </div>
                     <div v-else-if="tool.inputType === 'none'" class="no-input">
-                        点击执行按钮即可
+                        {{ t('placeholder.none') }}
                     </div>
 
                     <div v-if="tool.extraParams" class="extra-params">
@@ -538,13 +538,13 @@
                     </div>
 
                     <div class="actions">
-                        <el-button type="primary" @click="executeTool(tool)" th:text="#{action.execute}">执行</el-button>
-                        <el-button @click="clearTool(tool)" th:text="#{action.clear}">清空</el-button>
-                        <el-button @click="copyResult(tool.result)" th:text="#{action.copy}">复制</el-button>
+                        <el-button type="primary" @click="executeTool(tool)">{{ t('action.execute') }}</el-button>
+                        <el-button @click="clearTool(tool)">{{ t('action.clear') }}</el-button>
+                        <el-button @click="copyResult(tool.result)">{{ t('action.copy') }}</el-button>
                     </div>
 
                     <div class="result" :class="{'result-placeholder': !tool.result}" :ref="el => setResultRef(tool.id, el)" @click="focusResult(tool.id)" @keydown.ctrl.a.prevent="selectCurrentResult(tool.id)" tabindex="0">
-                        {{ tool.result || '输出结果' }}
+                        {{ tool.result || t('placeholder.output') }}
                     </div>
                 </div>
             </div>
@@ -570,9 +570,26 @@ const app = createApp({
         const isDark = ref(true);
         const resultRefs = ref({});
         const focusedResultId = ref(null);
+        const translations = ref({});
+        const uiText = ref({});
+
+        // Translation function
+        const t = (key) => {
+            return translations.value[key] || key;
+        };
+
+        // Fetch translations from server
+        const fetchTranslations = async (lang) => {
+            try {
+                const response = await axios.get('/api/i18n?lang=' + lang);
+                translations.value = response.data;
+            } catch (error) {
+                console.error('Failed to fetch translations:', error);
+            }
+        };
 
         // Initialize theme from localStorage
-        onMounted(() => {
+        onMounted(async () => {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme) {
                 isDark.value = savedTheme === 'dark';
@@ -580,6 +597,9 @@ const app = createApp({
                 isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches;
             }
             document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light');
+
+            // Load translations
+            await fetchTranslations('zh-CN');
         });
 
         const toggleTheme = () => {
@@ -608,48 +628,79 @@ const app = createApp({
             }
         };
 
-        const tools = ref([
-            { id: 'base64-encode', category: 'encoder', name: 'Base64编码', inputType: 'textarea', inputPlaceholder: '请输入要编码的文本' },
-            { id: 'base64-decode', category: 'encoder', name: 'Base64解码', inputType: 'textarea', inputPlaceholder: '请输入要解码的Base64' },
-            { id: 'url-encode', category: 'encoder', name: 'URL编码', inputType: 'textarea', inputPlaceholder: '请输入要编码的URL' },
-            { id: 'url-decode', category: 'encoder', name: 'URL解码', inputType: 'textarea', inputPlaceholder: '请输入要解码的URL' },
-            { id: 'html-escape', category: 'encoder', name: 'HTML转义', inputType: 'textarea', inputPlaceholder: '请输入要转义的HTML' },
-            { id: 'html-unescape', category: 'encoder', name: 'HTML反转义', inputType: 'textarea', inputPlaceholder: '请输入要反转义的内容' },
-            { id: 'unicode-encode', category: 'encoder', name: 'Unicode编码', inputType: 'textarea', inputPlaceholder: '请输入要编码的中文' },
-            { id: 'unicode-decode', category: 'encoder', name: 'Unicode解码', inputType: 'textarea', inputPlaceholder: '请输入要解码的Unicode' },
+        // Tool definitions with translation keys
+        const toolDefs = [
+            { id: 'base64-encode', category: 'encoder', nameKey: 'tool.base64Encode', inputType: 'textarea', placeholderKey: 'placeholder.base64Encode' },
+            { id: 'base64-decode', category: 'encoder', nameKey: 'tool.base64Decode', inputType: 'textarea', placeholderKey: 'placeholder.base64Decode' },
+            { id: 'url-encode', category: 'encoder', nameKey: 'tool.urlEncode', inputType: 'textarea', placeholderKey: 'placeholder.urlEncode' },
+            { id: 'url-decode', category: 'encoder', nameKey: 'tool.urlDecode', inputType: 'textarea', placeholderKey: 'placeholder.urlDecode' },
+            { id: 'html-escape', category: 'encoder', nameKey: 'tool.htmlEscape', inputType: 'textarea', placeholderKey: 'placeholder.htmlEscape' },
+            { id: 'html-unescape', category: 'encoder', nameKey: 'tool.htmlUnescape', inputType: 'textarea', placeholderKey: 'placeholder.htmlUnescape' },
+            { id: 'unicode-encode', category: 'encoder', nameKey: 'tool.unicodeEncode', inputType: 'textarea', placeholderKey: 'placeholder.unicodeEncode' },
+            { id: 'unicode-decode', category: 'encoder', nameKey: 'tool.unicodeDecode', inputType: 'textarea', placeholderKey: 'placeholder.unicodeDecode' },
 
-            { id: 'current-timestamp', category: 'datetime', name: '当前时间戳', inputType: 'none' },
-            { id: 'timestamp-to-date', category: 'datetime', name: '时间戳转日期', inputType: 'text', inputPlaceholder: '请输入时间戳', extraParams: [{key: 'format', label: '日期格式', placeholder: 'yyyy-MM-dd HH:mm:ss'}], extraData: {format: 'yyyy-MM-dd HH:mm:ss'} },
-            { id: 'date-to-timestamp', category: 'datetime', name: '日期转时间戳', inputType: 'text', inputPlaceholder: '请输入日期', extraParams: [{key: 'format', label: '日期格式', placeholder: 'yyyy-MM-dd HH:mm:ss'}], extraData: {format: 'yyyy-MM-dd HH:mm:ss'} },
+            { id: 'current-timestamp', category: 'datetime', nameKey: 'tool.currentTimestamp', inputType: 'none' },
+            { id: 'timestamp-to-date', category: 'datetime', nameKey: 'tool.timestampToDate', inputType: 'text', placeholderKey: 'placeholder.timestamp', extraParams: [{key: 'format', labelKey: 'label.format', placeholderKey: 'placeholder.dateFormat', defaultValue: 'yyyy-MM-dd HH:mm:ss'}], extraData: {format: 'yyyy-MM-dd HH:mm:ss'} },
+            { id: 'date-to-timestamp', category: 'datetime', nameKey: 'tool.dateToTimestamp', inputType: 'text', placeholderKey: 'placeholder.date', extraParams: [{key: 'format', labelKey: 'label.format', placeholderKey: 'placeholder.dateFormat', defaultValue: 'yyyy-MM-dd HH:mm:ss'}], extraData: {format: 'yyyy-MM-dd HH:mm:ss'} },
 
-            { id: 'format-json', category: 'formatter', name: 'JSON格式化', inputType: 'textarea', inputPlaceholder: '请输入JSON' },
-            { id: 'compress-json', category: 'formatter', name: 'JSON压缩', inputType: 'textarea', inputPlaceholder: '请输入JSON' },
-            { id: 'format-xml', category: 'formatter', name: 'XML格式化', inputType: 'textarea', inputPlaceholder: '请输入XML' },
-            { id: 'format-sql', category: 'formatter', name: 'SQL美化', inputType: 'textarea', inputPlaceholder: '请输入SQL' },
+            { id: 'format-json', category: 'formatter', nameKey: 'tool.formatJson', inputType: 'textarea', placeholderKey: 'placeholder.json' },
+            { id: 'compress-json', category: 'formatter', nameKey: 'tool.compressJson', inputType: 'textarea', placeholderKey: 'placeholder.json' },
+            { id: 'format-xml', category: 'formatter', nameKey: 'tool.formatXml', inputType: 'textarea', placeholderKey: 'placeholder.xml' },
+            { id: 'format-sql', category: 'formatter', nameKey: 'tool.formatSql', inputType: 'textarea', placeholderKey: 'placeholder.sql' },
 
-            { id: 'md5', category: 'crypto', name: 'MD5哈希', inputType: 'textarea', inputPlaceholder: '请输入要哈希的文本' },
-            { id: 'sha1', category: 'crypto', name: 'SHA-1哈希', inputType: 'textarea', inputPlaceholder: '请输入要哈希的文本' },
-            { id: 'sha256', category: 'crypto', name: 'SHA-256哈希', inputType: 'textarea', inputPlaceholder: '请输入要哈希的文本' },
-            { id: 'aes-encrypt', category: 'crypto', name: 'AES加密', inputType: 'textarea', inputPlaceholder: '请输入要加密的文本', extraParams: [{key: 'key', label: '密钥', placeholder: '请输入密钥'}], extraData: {key: ''} },
-            { id: 'aes-decrypt', category: 'crypto', name: 'AES解密', inputType: 'textarea', inputPlaceholder: '请输入要解密的密文', extraParams: [{key: 'key', label: '密钥', placeholder: '请输入密钥'}], extraData: {key: ''} },
-            { id: 'des-encrypt', category: 'crypto', name: 'DES加密', inputType: 'textarea', inputPlaceholder: '请输入要加密的文本', extraParams: [{key: 'key', label: '密钥', placeholder: '请输入密钥'}], extraData: {key: ''} },
-            { id: 'des-decrypt', category: 'crypto', name: 'DES解密', inputType: 'textarea', inputPlaceholder: '请输入要解密的密文', extraParams: [{key: 'key', label: '密钥', placeholder: '请输入密钥'}], extraData: {key: ''} },
-            { id: 'rsa-generate-key', category: 'crypto', name: '生成RSA密钥对', inputType: 'none' },
+            { id: 'md5', category: 'crypto', nameKey: 'tool.md5', inputType: 'textarea', placeholderKey: 'placeholder.crypto' },
+            { id: 'sha1', category: 'crypto', nameKey: 'tool.sha1', inputType: 'textarea', placeholderKey: 'placeholder.crypto' },
+            { id: 'sha256', category: 'crypto', nameKey: 'tool.sha256', inputType: 'textarea', placeholderKey: 'placeholder.crypto' },
+            { id: 'aes-encrypt', category: 'crypto', nameKey: 'tool.aesEncrypt', inputType: 'textarea', placeholderKey: 'placeholder.crypto', extraParams: [{key: 'key', labelKey: 'label.key', placeholderKey: 'placeholder.key', defaultValue: ''}], extraData: {key: ''} },
+            { id: 'aes-decrypt', category: 'crypto', nameKey: 'tool.aesDecrypt', inputType: 'textarea', placeholderKey: 'placeholder.ciphertext', extraParams: [{key: 'key', labelKey: 'label.key', placeholderKey: 'placeholder.key', defaultValue: ''}], extraData: {key: ''} },
+            { id: 'des-encrypt', category: 'crypto', nameKey: 'tool.desEncrypt', inputType: 'textarea', placeholderKey: 'placeholder.crypto', extraParams: [{key: 'key', labelKey: 'label.key', placeholderKey: 'placeholder.key', defaultValue: ''}], extraData: {key: ''} },
+            { id: 'des-decrypt', category: 'crypto', nameKey: 'tool.desDecrypt', inputType: 'textarea', placeholderKey: 'placeholder.ciphertext', extraParams: [{key: 'key', labelKey: 'label.key', placeholderKey: 'placeholder.key', defaultValue: ''}], extraData: {key: ''} },
+            { id: 'rsa-generate-key', category: 'crypto', nameKey: 'tool.rsaGenerateKey', inputType: 'none' },
 
-            { id: 'hex-to-rgb', category: 'common', name: 'HEX转RGB', inputType: 'text', inputPlaceholder: '请输入HEX颜色值，如#FF0000' },
-            { id: 'rgb-to-hex', category: 'common', name: 'RGB转HEX', inputType: 'text', inputPlaceholder: '请输入RGB值，如255,0,0', extraParams: [{key: 'r', label: 'R', placeholder: 'R'}, {key: 'g', label: 'G', placeholder: 'G'}, {key: 'b', label: 'B', placeholder: 'B'}], extraData: {r: '', g: '', b: ''} },
-            { id: 'generate-uuid', category: 'common', name: '生成UUID', inputType: 'none' },
-            { id: 'parse-jwt', category: 'common', name: 'JWT解析', inputType: 'textarea', inputPlaceholder: '请输入JWT Token' },
-            { id: 'parse-cron', category: 'common', name: 'Cron解析', inputType: 'text', inputPlaceholder: '请输入Cron表达式，如0 0 * * * ?' },
-            { id: 'test-regex', category: 'common', name: '正则测试', inputType: 'textarea', inputPlaceholder: '请输入要匹配的文本', extraParams: [{key: 'pattern', label: '正则表达式', placeholder: '请输入正则表达式'}], extraData: {pattern: ''} },
-        ]);
+            { id: 'hex-to-rgb', category: 'common', nameKey: 'tool.hexToRgb', inputType: 'text', placeholderKey: 'placeholder.hexColor' },
+            { id: 'rgb-to-hex', category: 'common', nameKey: 'tool.rgbToHex', inputType: 'text', placeholderKey: 'placeholder.rgb', extraParams: [{key: 'r', labelKey: 'label.r', placeholderKey: 'placeholder.r', defaultValue: ''}, {key: 'g', labelKey: 'label.g', placeholderKey: 'placeholder.g', defaultValue: ''}, {key: 'b', labelKey: 'label.b', placeholderKey: 'placeholder.b', defaultValue: ''}], extraData: {r: '', g: '', b: ''} },
+            { id: 'generate-uuid', category: 'common', nameKey: 'tool.generateUuid', inputType: 'none' },
+            { id: 'parse-jwt', category: 'common', nameKey: 'tool.parseJwt', inputType: 'textarea', placeholderKey: 'placeholder.jwt' },
+            { id: 'parse-cron', category: 'common', nameKey: 'tool.parseCron', inputType: 'text', placeholderKey: 'placeholder.cron' },
+            { id: 'test-regex', category: 'common', nameKey: 'tool.testRegex', inputType: 'textarea', placeholderKey: 'placeholder.regex', extraParams: [{key: 'pattern', labelKey: 'label.pattern', placeholderKey: 'placeholder.pattern', defaultValue: ''}], extraData: {pattern: ''} },
+        ];
+
+        const tools = computed(() => {
+            return toolDefs.map(tool => {
+                const result = {
+                    id: tool.id,
+                    category: tool.category,
+                    inputType: tool.inputType,
+                    name: translations.value[tool.nameKey] || tool.nameKey,
+                    inputPlaceholder: translations.value[tool.placeholderKey] || tool.placeholderKey,
+                    extraParams: tool.extraParams ? tool.extraParams.map(p => ({
+                        key: p.key,
+                        label: translations.value[p.labelKey] || p.labelKey,
+                        placeholder: translations.value[p.placeholderKey] || p.placeholderKey
+                    })) : null,
+                    extraData: tool.extraData ? { ...tool.extraData } : null,
+                    input: '',
+                    result: ''
+                };
+                // Initialize extraData with default values
+                if (tool.extraParams) {
+                    tool.extraParams.forEach(p => {
+                        if (p.defaultValue !== undefined) {
+                            result.extraData[p.key] = p.defaultValue;
+                        }
+                    });
+                }
+                return result;
+            });
+        });
 
         const currentTools = computed(() => {
             return tools.value.filter(t => t.category === activeCategory.value);
         });
 
-        const switchLanguage = (lang) => {
+        const switchLanguage = async (lang) => {
             locale.value = lang;
+            await fetchTranslations(lang);
         };
 
         const getApiPath = (toolId) => {
@@ -757,6 +808,7 @@ const app = createApp({
         return {
             locale,
             isDark,
+            t,
             toggleTheme,
             activeCategory,
             currentTools,
